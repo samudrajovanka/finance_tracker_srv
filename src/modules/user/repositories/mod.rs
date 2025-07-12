@@ -1,11 +1,15 @@
 pub mod types;
 
-use sqlx::PgPool;
+use sqlx::{Executor, Postgres};
 use crate::modules::auth::models::{AuthProvider, AuthProviderType};
 use super::models::User;
 use self::types::{ CreateAuthProviderPayload, CreateUserPayload };
 
-pub async fn get_user_by_provider(pool: &PgPool, provider: AuthProviderType, provider_user_id: &str) -> Result<Option<User>, sqlx::Error> {
+pub async fn get_user_by_provider<'e, E>(
+    executor: E,
+    provider: AuthProviderType,
+    provider_user_id: &str
+) -> Result<Option<User>, sqlx::Error> where E: Executor<'e, Database = Postgres> {
     let user = sqlx::query_as!(
         User,
         r#"
@@ -16,13 +20,16 @@ pub async fn get_user_by_provider(pool: &PgPool, provider: AuthProviderType, pro
         provider_user_id,
         provider as AuthProviderType
     )
-    .fetch_optional(pool)
+    .fetch_optional(executor)
     .await?;
 
     Ok(user)
 }
 
-pub async fn create_user(pool: &PgPool, payload: CreateUserPayload) -> Result<User, sqlx::Error> {
+pub async fn create_user<'e, E>(
+    executor: E,
+    payload: CreateUserPayload
+) -> Result<User, sqlx::Error> where E: Executor<'e, Database = Postgres> {
     sqlx::query_as!(
         User,
         r#"
@@ -33,11 +40,14 @@ pub async fn create_user(pool: &PgPool, payload: CreateUserPayload) -> Result<Us
         payload.name,
         payload.email
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await
 }
 
-pub async fn create_user_auth_provider(pool: &PgPool, payload: CreateAuthProviderPayload) -> Result<AuthProvider, sqlx::Error> {
+pub async fn create_user_auth_provider<'e, E>(
+    executor: E,
+    payload: CreateAuthProviderPayload
+) -> Result<AuthProvider, sqlx::Error> where E: Executor<'e, Database = Postgres> {
     sqlx::query_as!(
         AuthProvider,
         r#"
@@ -55,6 +65,6 @@ pub async fn create_user_auth_provider(pool: &PgPool, payload: CreateAuthProvide
         payload.provider as AuthProviderType,
         payload.provider_user_id,
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await
 }

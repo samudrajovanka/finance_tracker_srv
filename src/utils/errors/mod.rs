@@ -11,6 +11,9 @@ pub enum AppError {
     #[display("{_0}")]
     NotFound(#[error(not(source))] String),
 
+    #[display("Unauthorized access. Please log in.")]
+    Unauthorized,
+
     #[display("An internal error occurred. Please try again later.")]
     Internal(#[error(not(source))] anyhow::Error),
 }
@@ -20,6 +23,7 @@ impl AppError {
         match self {
             AppError::BadRequest(_) => "BAD_REQUEST",
             AppError::NotFound(_) => "NOT_FOUND",
+            AppError::Unauthorized => "UNAUTHORIZED",
             AppError::Internal(_) => "INTERNAL_SERVER_ERROR",
         }
     }
@@ -35,6 +39,7 @@ impl error::ResponseError for AppError {
         match self {
             AppError::BadRequest(_) => StatusCode::BAD_REQUEST,
             AppError::NotFound(_) => StatusCode::NOT_FOUND,
+            AppError::Unauthorized => StatusCode::UNAUTHORIZED,
             AppError::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -61,5 +66,11 @@ impl From<sqlx::Error> for AppError {
 impl From<anyhow::Error> for AppError {
     fn from(err: anyhow::Error) -> Self {
         AppError::Internal(err)
+    }
+}
+
+impl From<actix_web::Error> for AppError {
+    fn from(err: actix_web::Error) -> Self {
+        AppError::Internal(anyhow::anyhow!("{err}"))
     }
 }

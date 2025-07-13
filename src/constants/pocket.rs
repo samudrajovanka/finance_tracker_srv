@@ -1,0 +1,1 @@
+pub const DEFAULT_POCKET_NAME: &str = "Main";

@@ -7,7 +7,7 @@ pub struct GoogleClaims {
     pub name: String
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AccessTokenClaims {
     pub email: String,
     pub exp: usize

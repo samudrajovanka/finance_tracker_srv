@@ -3,52 +3,29 @@ pub mod google_oauth;
 
 use sqlx::PgPool;
 
-use super::models::{AuthProviderType};
 use crate::modules::user::{
-    repositories::{
+    services::{
+        types::{
+            CreateUserPayload
+        },
         get_user_by_provider,
-        create_user,
-        create_user_auth_provider,
-        types::{CreateAuthProviderPayload, CreateUserPayload}
-    }
-};
-use crate::modules::pocket::{
-    services::{create_pocket},
-    repositories::{
-        types::CreatePocketPayload
+        create_user_with_pocket
     }
 };
 use crate::utils::errors::AppError;
 use crate::utils::helpers::auth::generate_access_token;
 
-pub async fn login_oauth(pool: &PgPool, provider: AuthProviderType, provider_user_id: &str, payload: CreateUserPayload) -> Result<String, AppError> {
-    let user = get_user_by_provider(pool, provider.clone(), provider_user_id).await;
+pub async fn login_oauth(pool: &PgPool, payload: CreateUserPayload) -> Result<String, AppError> {
+    let user = get_user_by_provider(pool, payload.provider.clone(), payload.provider_user_id.as_str()).await;
 
     let user = match user {
         Ok(Some(user)) => user,
         Ok(None) => {
             let mut tx = pool.begin().await?;
 
-            let new_user = create_user(
-                &mut *tx,
+            let new_user = create_user_with_pocket(
+                &mut tx,
                 payload
-            ).await?;
-
-            create_user_auth_provider(
-                &mut *tx,
-                CreateAuthProviderPayload {
-                    user_id: new_user.id,
-                    provider: provider.clone(),
-                    provider_user_id: provider_user_id.to_string(),
-                }
-            ).await?;
-
-            create_pocket(
-                &mut *tx,
-                CreatePocketPayload {
-                    name: String::from("Main"),
-                    user_id: new_user.id
-                }
             ).await?;
 
             tx.commit().await?;

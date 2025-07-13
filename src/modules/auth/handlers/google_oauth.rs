@@ -3,14 +3,21 @@ use sqlx::PgPool;
 use url::Url;
 use std::env;
 
-use super::super::services::{google_oauth, login_oauth};
-use super::super::models::{AuthProviderType};
-use crate::modules::user::repositories::{
-    types::{CreateUserPayload},
-};
+use crate::constants::token::{COOKIE_ACCESS_TOKEN_KEY, MAX_AGE_ACCESS_TOKEN_MS};
 use crate::utils::errors::AppError;
 use crate::utils::helpers::env::env_required;
-use super::types::OAuthCallbackQuery;
+use crate::modules::user::{
+    services::types::{
+        CreateUserPayload
+    }
+};
+use super::{
+    types::OAuthCallbackQuery,
+    super::{
+        models::{AuthProviderType},
+        services
+    },
+};
 
 #[get("/login")]
 pub async fn google_login() -> impl Responder {
@@ -39,23 +46,25 @@ pub async fn google_callback(
     query: web::Query<OAuthCallbackQuery>,
     pool: web::Data<PgPool>
 ) -> Result<impl Responder, AppError> {
-    let google_user = google_oauth::handle_google_callback(&query.code)
+    let google_user = services::google_oauth::handle_google_callback(&query.code)
         .await?;
 
     let payload = CreateUserPayload {
         name: google_user.name.clone(),
         email: google_user.email.clone(),
+        provider: AuthProviderType::Google,
+        provider_user_id: google_user.sub.clone()
     };  
 
-    let access_token = login_oauth(&pool, AuthProviderType::Google, &google_user.sub, payload)
+    let access_token = services::login_oauth(&pool, payload)
         .await?;
 
     let is_secure = env::var("APP_ENV").unwrap_or_default() == "production";
-    let cookie = cookie::Cookie::build("access_token", access_token.clone())
+    let cookie = cookie::Cookie::build(COOKIE_ACCESS_TOKEN_KEY, access_token.clone())
         .path("/")
         .http_only(true)
         .secure(is_secure)
-        .max_age(time::Duration::hours(24))
+        .max_age(time::Duration::milliseconds(MAX_AGE_ACCESS_TOKEN_MS))
         .finish();
 
     let frontend_redirect_url = env_required("REDIRECT_OAUTH_AFTER_LOGIN_URL")?;

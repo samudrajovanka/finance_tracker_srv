@@ -68,3 +68,21 @@ pub async fn create_user_auth_provider<'e, E>(
     .fetch_one(executor)
     .await
 }
+
+pub async fn get_user_by_email<'e, E>(
+    executor: E,
+    email: &str
+) -> Result<Option<User>, sqlx::Error> where E: Executor<'e, Database = Postgres> {
+    let user = sqlx::query_as!(
+        User,
+        r#"
+        SELECT * FROM users
+        WHERE email = $1;
+        "#,
+        email
+    )
+    .fetch_optional(executor)
+    .await?;
+
+    Ok(user)
+}

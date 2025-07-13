@@ -3,6 +3,8 @@ mod routes;
 mod handlers;
 mod utils;
 mod modules;
+mod middlewares;
+mod constants;
 
 use actix_web::{web, App, HttpServer};
 use dotenvy::dotenv;

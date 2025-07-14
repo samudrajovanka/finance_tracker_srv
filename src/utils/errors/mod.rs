@@ -1,3 +1,5 @@
+pub mod json_error;
+
 use actix_web::{error, http::StatusCode, HttpResponse};
 use derive_more::derive::{Display, Error};
 

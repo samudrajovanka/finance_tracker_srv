@@ -3,11 +3,10 @@ pub mod types;
 use sqlx::{Executor, Postgres};
 use crate::modules::auth::models::{AuthProvider, AuthProviderType};
 use super::models::User;
-use self::types::{ CreateAuthProviderPayload, CreateUserPayload };
 
 pub async fn get_user_by_provider<'e, E>(
     executor: E,
-    provider: AuthProviderType,
+    provider: &AuthProviderType,
     provider_user_id: &str
 ) -> Result<Option<User>, sqlx::Error> where E: Executor<'e, Database = Postgres> {
     let user = sqlx::query_as!(
@@ -18,7 +17,7 @@ pub async fn get_user_by_provider<'e, E>(
         WHERE ap.provider_user_id = $1 AND ap.provider = $2::auth_provider_type;
         "#,
         provider_user_id,
-        provider as AuthProviderType
+        &provider as _
     )
     .fetch_optional(executor)
     .await?;
@@ -28,7 +27,7 @@ pub async fn get_user_by_provider<'e, E>(
 
 pub async fn create_user<'e, E>(
     executor: E,
-    payload: CreateUserPayload
+    payload: &types::CreateUserPayload
 ) -> Result<User, sqlx::Error> where E: Executor<'e, Database = Postgres> {
     sqlx::query_as!(
         User,
@@ -46,7 +45,7 @@ pub async fn create_user<'e, E>(
 
 pub async fn create_user_auth_provider<'e, E>(
     executor: E,
-    payload: CreateAuthProviderPayload
+    payload: &types::CreateAuthProviderPayload
 ) -> Result<AuthProvider, sqlx::Error> where E: Executor<'e, Database = Postgres> {
     sqlx::query_as!(
         AuthProvider,
@@ -62,7 +61,7 @@ pub async fn create_user_auth_provider<'e, E>(
             updated_at;
         "#,
         payload.user_id,
-        payload.provider as AuthProviderType,
+        &payload.provider as _,
         payload.provider_user_id,
     )
     .fetch_one(executor)

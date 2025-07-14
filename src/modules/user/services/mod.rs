@@ -17,14 +17,13 @@ use super::{
     models::User,
     repositories
 };
-use self::types::CreateUserPayload;
 
 pub async fn get_user_by_provider(
     pool: &PgPool,
     provider: AuthProviderType,
     provider_user_id: &str
 ) -> Result<Option<User>, AppError> {
-    let user = repositories::get_user_by_provider(pool, provider, provider_user_id)
+    let user = repositories::get_user_by_provider(pool, &provider, provider_user_id)
         .await?;
 
     Ok(user)
@@ -32,15 +31,15 @@ pub async fn get_user_by_provider(
 
 pub async fn create_user_with_pocket(
     tx: &mut Transaction<'_, Postgres>,
-    payload: CreateUserPayload
+    payload: types::CreateUserPayload
 ) -> Result<User, AppError> {
-    let user = repositories::create_user(&mut **tx, repositories::types::CreateUserPayload {
+    let user = repositories::create_user(&mut **tx, &repositories::types::CreateUserPayload {
         name: payload.name,
         email: payload.email
     })
         .await?;
 
-    repositories::create_user_auth_provider(&mut **tx, repositories::types::CreateAuthProviderPayload {
+    repositories::create_user_auth_provider(&mut **tx, &repositories::types::CreateAuthProviderPayload {
         user_id: user.id,
         provider: payload.provider,
         provider_user_id: payload.provider_user_id

@@ -751,6 +751,7 @@ dependencies = [
  "env_logger",
  "jsonwebtoken",
  "log",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

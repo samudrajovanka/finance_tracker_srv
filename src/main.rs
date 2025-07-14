@@ -13,6 +13,8 @@ use log::{info, error};
 use env_logger::Env;
 use handlers::not_found;
 
+use crate::utils::errors::json_error::json_error_handler;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -36,6 +38,7 @@ async fn main() -> std::io::Result<()> {
                 App::new()
                     .wrap(cors)
                     .app_data(web::Data::new(pool.clone()))
+                    .app_data(web::JsonConfig::default().error_handler(json_error_handler))
                     .wrap(Logger::default())
                     .configure(routes::config_route)
                     .default_service(web::route().to(not_found))

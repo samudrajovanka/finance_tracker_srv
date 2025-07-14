@@ -36,6 +36,6 @@ pub async fn user_auth_middleware(
             req.extensions_mut().insert(user);
             next.call(req).await
         },
-        None => return Err(AppError::Unauthorized.into()),
+        None => Err(AppError::Unauthorized.into()),
     }
 }

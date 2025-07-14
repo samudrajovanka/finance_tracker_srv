@@ -11,7 +11,7 @@ pub async fn create_pocket<'e, E>(
     executor: E,
     payload: repositories::types::CreatePocketPayload
 ) -> Result<Pocket, AppError> where E: Executor<'e, Database = Postgres> {
-    let pocket = repositories::create_pocket(executor, payload).await?;
+    let pocket = repositories::create_pocket(executor, &payload).await?;
 
     Ok(pocket)
 }
@@ -23,4 +23,13 @@ pub async fn get_user_pockets<'e, E>(
     let pockets = repositories::get_pockets_by_user_id(executor, user_id).await?;
 
     Ok(pockets)
+}
+
+pub async fn update_balance_pockets<'e, E>(
+    executor: E,
+    payload: &repositories::types::UpdatePocketBalancePayload
+) -> Result<Pocket, AppError> where E: Executor<'e, Database = Postgres> {
+    let pocket = repositories::update_balance_pocket(executor, payload).await?;
+
+    Ok(pocket)
 }

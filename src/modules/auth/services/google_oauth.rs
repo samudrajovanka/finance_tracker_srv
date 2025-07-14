@@ -1,8 +1,8 @@
 use reqwest::Client as HttpClient;
 use crate::utils::{errors::AppError, helpers::auth::google_oauth::verify_google_id_token};
-use super::types::{ GoogleUserInfo, GoogleTokenResponse };
+use super::types;
 
-pub async fn handle_google_callback(code: &str) -> Result<GoogleUserInfo, AppError> {
+pub async fn handle_google_callback(code: &str) -> Result<types::GoogleUserInfo, AppError> {
     let http_client = HttpClient::new();
 
     let client_id = std::env::var("GOOGLE_CLIENT_ID")?;
@@ -27,12 +27,12 @@ pub async fn handle_google_callback(code: &str) -> Result<GoogleUserInfo, AppErr
         return Err(AppError::BadRequest(String::from("Failed to exchange code for token")));
     }
 
-    let token_resp: GoogleTokenResponse = response.json().await?;
+    let token_resp: types::GoogleTokenResponse = response.json().await?;
 
     let id_token = token_resp.id_token;
     let claims = verify_google_id_token(&id_token).await?;
 
-    let user_info = GoogleUserInfo {
+    let user_info = types::GoogleUserInfo {
         sub: claims.sub,
         email: claims.email,
         name: claims.name,

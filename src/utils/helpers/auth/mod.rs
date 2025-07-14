@@ -7,7 +7,7 @@ use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, 
 
 use self::types::AccessTokenClaims;
 use crate::constants::{
-    token::MAX_AGE_ACCESS_TOKEN_MS
+    token::MAX_AGE_ACCESS_TOKEN_SECOND
 };
 use crate::modules::user::{
     models::User
@@ -21,7 +21,7 @@ use crate::utils::{
 
 pub fn generate_access_token(user: &User) -> Result<String, anyhow::Error> {
     let expiration = Utc::now()
-        .checked_add_signed(Duration::milliseconds(MAX_AGE_ACCESS_TOKEN_MS))
+        .checked_add_signed(Duration::seconds(MAX_AGE_ACCESS_TOKEN_SECOND))
         .unwrap()
         .timestamp() as usize;
     

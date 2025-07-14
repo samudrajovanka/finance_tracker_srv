@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use url::Url;
 use std::env;
 
-use crate::constants::token::{COOKIE_ACCESS_TOKEN_KEY, MAX_AGE_ACCESS_TOKEN_MS};
+use crate::constants::token::{COOKIE_ACCESS_TOKEN_KEY, MAX_AGE_ACCESS_TOKEN_SECOND};
 use crate::utils::errors::AppError;
 use crate::utils::helpers::env::env_required;
 use crate::modules::user::{
@@ -64,7 +64,7 @@ pub async fn google_callback(
         .path("/")
         .http_only(true)
         .secure(is_secure)
-        .max_age(time::Duration::milliseconds(MAX_AGE_ACCESS_TOKEN_MS))
+        .max_age(time::Duration::seconds(MAX_AGE_ACCESS_TOKEN_SECOND))
         .finish();
 
     let frontend_redirect_url = env_required("REDIRECT_OAUTH_AFTER_LOGIN_URL")?;

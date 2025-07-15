@@ -14,12 +14,13 @@ use crate::modules::transaction_category::{
     repositories::check_exist_category_by_id_and_type
 };
 use super::{
-    repositories
+    repositories,
+    models
 };
 
 pub async fn create_transaction(
     pool: &PgPool,
-    payload: &repositories::types::CreateTransactionPayload
+    payload: &mut repositories::types::CreateTransactionPayload
 ) -> Result<Uuid, AppError> {
     let category_exist = check_exist_category_by_id_and_type(
         pool,
@@ -35,6 +36,12 @@ pub async fn create_transaction(
 
     let mut tx = pool.begin().await?;
     
+    payload.amount = if payload.transaction_type == models::TransactionType::Income {
+        payload.amount.clone()
+    } else {
+        -payload.amount.clone()
+    };
+
     let transaction = repositories::insert_transaction_to_pocket(&mut *tx, payload).await?;
     update_balance_pockets(&mut *tx, &UpdatePocketBalancePayload {
         pocket_id: payload.pocket_id,

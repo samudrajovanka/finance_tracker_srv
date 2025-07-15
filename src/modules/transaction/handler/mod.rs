@@ -3,6 +3,7 @@ mod types;
 use actix_web::{post, web, HttpResponse, Responder};
 use sqlx::PgPool;
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::modules::user::{
     models::User
@@ -21,7 +22,10 @@ pub async fn create_transaction(
     pocket_id: web::Path<Uuid>,
     payload: web::Json<types::CreateTransactionPayload>
 ) -> Result<impl Responder, AppError> {
-    let transaction_id = services::create_transaction(&pool, &repositories::types::CreateTransactionPayload {
+    payload.validate()
+        .map_err(|e| AppError::BadRequest(e.to_string()))?;
+    
+    let transaction_id = services::create_transaction(&pool, &mut repositories::types::CreateTransactionPayload {
         pocket_id: *pocket_id,
         user_id: logged_user.id,
         category_id: payload.category_id,

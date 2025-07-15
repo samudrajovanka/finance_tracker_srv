@@ -27,7 +27,7 @@ pub async fn create_transaction(
         &payload.transaction_type
     ).await?;
 
-    if category_exist == false {
+    if !category_exist {
         return Err(
             AppError::BadRequest("Category does not exist for this transaction type".to_string())
         );
